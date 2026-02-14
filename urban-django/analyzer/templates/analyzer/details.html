@@ -1,0 +1,233 @@
+{% extends 'analyzer/base.html' %}
+
+{% block content %}
+<div class="details-container">
+    <div class="header-section" style="background-image: url('{{ habitat.image_url }}');">
+        <div class="overlay">
+            <h1>{{ habitat.name }}</h1>
+            <p>{{ habitat.description }}</p>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Population Density</h3>
+            <p>{{ habitat.population_density }} /sq km</p>
+        </div>
+        <div class="stat-card">
+            <h3>Crime Rate</h3>
+            <p>{{ habitat.crime_rate }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Green Space</h3>
+            <p>{{ habitat.green_space }}%</p>
+        </div>
+        <div class="stat-card">
+            <h3>Schools</h3>
+            <p>{{ habitat.schools }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Hospitals</h3>
+            <p>{{ habitat.hospitals }}</p>
+        </div>
+    </div>
+
+    <div class="grid" style="margin-top: 2rem;">
+        <!-- Chart Section -->
+        <div class="chart-section" style="flex: 1;">
+            <h3>Likability Score Breakdown</h3>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="metricsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Map Section -->
+        <div class="card" style="flex: 1; padding: 1.5rem;">
+            <h3>Habitat Map</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                Visualizing pollution zones (Red) and green areas (Green).
+            </p>
+            <div id="map" style="height: 300px; border-radius: 12px; z-index: 1;"></div>
+        </div>
+    </div>
+
+    <!-- Recommendations Section -->
+    <div class="card" style="margin-top: 2rem; padding: 1.5rem;">
+        <h3 style="color: var(--accent-purple);">AI-Driven Recommendations</h3>
+        <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+            {% for rec in recommendations %}
+            <li
+                style="background: rgba(139, 92, 246, 0.1); padding: 10px 15px; border-radius: 8px; margin-bottom: 0.5rem; border-left: 4px solid var(--accent-purple);">
+                {{ rec }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+
+</div>
+
+<!-- Category: Hospitals -->
+<div>
+    <h4 style="color: #ef4444; margin-bottom: 0.5rem; font-size: 1rem;">🏥 Hospitals</h4>
+    <ul class="amenity-list">
+        {% for item in amenities.hospitals|slice:":10" %}
+        <li>
+            <a href="https://www.google.com/search?q={{ item.name|urlencode }}+{{ habitat.name|urlencode }}"
+                target="_blank" class="amenity-badge">
+                {{ item.name }}
+            </a>
+        </li>
+        {% empty %}
+        <li style="color: var(--text-secondary); font-style: italic; font-size: 0.85rem;">None found.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Category: Schools -->
+<div>
+    <h4 style="color: #f59e0b; margin-bottom: 0.5rem; font-size: 1rem;">🏫 Schools</h4>
+    <ul class="amenity-list">
+        {% for item in amenities.schools|slice:":10" %}
+        <li>
+            <a href="https://www.google.com/search?q={{ item.name|urlencode }}+{{ habitat.name|urlencode }}"
+                target="_blank" class="amenity-badge">
+                {{ item.name }}
+            </a>
+        </li>
+        {% empty %}
+        <li style="color: var(--text-secondary); font-style: italic; font-size: 0.85rem;">None found.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Category: Shopping -->
+<div>
+    <h4 style="color: #8b5cf6; margin-bottom: 0.5rem; font-size: 1rem;">🛍️ Shopping</h4>
+    <ul class="amenity-list">
+        {% for item in amenities.shopping|slice:":10" %}
+        <li>
+            <a href="https://www.google.com/search?q={{ item.name|urlencode }}+{{ habitat.name|urlencode }}"
+                target="_blank" class="amenity-badge">
+                {{ item.name }}
+            </a>
+        </li>
+        {% empty %}
+        <li style="color: var(--text-secondary); font-style: italic; font-size: 0.85rem;">None found.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Category: Parks -->
+<div>
+    <h4 style="color: #10b981; margin-bottom: 0.5rem; font-size: 1rem;">🌳 Parks</h4>
+    <ul class="amenity-list">
+        {% for item in amenities.parks|slice:":10" %}
+        <li>
+            <a href="https://www.google.com/search?q={{ item.name|urlencode }}+{{ habitat.name|urlencode }}"
+                target="_blank" class="amenity-badge">
+                {{ item.name }}
+            </a>
+        </li>
+        {% empty %}
+        <li style="color: var(--text-secondary); font-style: italic; font-size: 0.85rem;">None found.</li>
+        {% endfor %}
+    </ul>
+</div>
+</div>
+</div>
+
+<div class="mt-8 text-center" style="margin-top: 2rem; text-align: center;">
+    <a href="{% url 'compare' %}" class="btn-details">Compare with another habitat &rarr;</a>
+</div>
+</div>
+
+{% include 'analyzer/leaflet_assets.html' %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Safe Data Injection using JS Parsing to avoid Django template syntax errors
+        const crimeRate = parseFloat("{{ habitat.crime_rate }}") || 0;
+        const greenSpace = parseFloat("{{ habitat.green_space }}") || 0;
+        const popDensity = parseFloat("{{ habitat.population_density }}") || 0;
+        const pollutionLevel = parseFloat("{{ habitat.pollution_level }}") || 50;
+        const lat = parseFloat("{{ habitat.latitude }}") || 0;
+        const lon = parseFloat("{{ habitat.longitude }}") || 0;
+        const habitatName = "{{ habitat.name|escapejs }}";
+
+        // --- Chart Config ---
+        try {
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Safety', 'Greenery', 'Density', 'Services', 'Affordability'],
+                    datasets: [{
+                        label: 'Score (0-100)',
+                        data: [
+                            crimeRate,
+                            greenSpace,
+                            Math.min(popDensity / 200, 100), // Normalize density
+                            90, // Services placeholder
+                            pollutionLevel
+                        ],
+                        backgroundColor: [
+                            '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'
+                        ],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100 },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        } catch (e) {
+            console.error("Chart Error:", e);
+        }
+
+        // --- Map Config ---
+        try {
+            var map = L.map('map').setView([lat, lon], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            // City Marker
+            L.marker([lat, lon])
+                .addTo(map)
+                .bindPopup(`<b>${habitatName}</b><br>Center Point`)
+                .openPopup();
+
+            // Simulated Polluted Zone (Red Circle)
+            L.circle([lat + 0.01, lon + 0.01], {
+                color: 'red',
+                fillColor: '#f03',
+                fillOpacity: 0.5,
+                radius: 800
+            }).addTo(map).bindPopup("High Pollution Zone");
+
+            // Simulated Green Park (Green Circle)
+            L.circle([lat - 0.01, lon - 0.01], {
+                color: 'green',
+                fillColor: '#0f3',
+                fillOpacity: 0.5,
+                radius: 1200
+            }).addTo(map).bindPopup("Central Green Park");
+
+            // Fix map sizing issues
+            setTimeout(() => { map.invalidateSize(); }, 100);
+
+        } catch (e) {
+            console.error("Map Error:", e);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'analyzer/base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+    <div class="header-section" style="margin-bottom: 2rem; text-align: center;">
+        <h1 style="color: var(--text-primary); margin-bottom: 0.5rem;">Nearby Amenities for {{ habitat.name }}</h1>
+        <p style="color: var(--text-secondary);">Famous and available places within 3km of the city center.</p>
+        <a href="{% url 'habitat_details' habitat.id %}" class="btn-details"
+            style="display: inline-block; margin-top: 1rem; text-decoration: none;">&larr; Back to Habitat Details</a>
+    </div>
+
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+
+        {% for category, items in amenities.items %}
+        <div class="card" style="padding: 0; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+            <!-- Category Header -->
+            <div
+                style="padding: 1rem; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <h3 style="margin: 0; text-transform: capitalize; color: var(--text-primary);">
+                    {% if category == 'restaurants' %}🍽️ Restaurants & Cafes
+                    {% elif category == 'hospitals' %}🏥 Hospitals & Clinics
+                    {% elif category == 'schools' %}🏫 Schools
+                    {% elif category == 'shopping' %}🛍️ Shopping
+                    {% elif category == 'worship' %}🙏 Worship
+                    {% elif category == 'parks' %}🌳 Parks
+                    {% else %}{{ category }}{% endif %}
+                </h3>
+            </div>
+
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for item in items %}
+                <li
+                    style="padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 0.5rem;">
+
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <h4 style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">{{ item.name }}</h4>
+                        <button onclick="flyToLocation({{ item.lat }}, {{ item.lon }})"
+                            style="background: none; border: 1px solid var(--accent-purple); color: var(--accent-purple); border-radius: 4px; padding: 2px 8px; font-size: 0.8rem; cursor: pointer;">
+                            <i class="fa-solid fa-map-location-dot"></i> Map
+                        </button>
+                    </div>
+
+                    <!-- Details -->
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                        {% if item.address != "Address not available" %}
+                        <div style="margin-bottom: 0.2rem;"><i class="fa-solid fa-location-dot"
+                                style="width: 20px; text-align: center;"></i> {{ item.address }}</div>
+                        {% endif %}
+
+                        {% if item.phone != "Not available" %}
+                        <div style="margin-bottom: 0.2rem;"><i class="fa-solid fa-phone"
+                                style="width: 20px; text-align: center;"></i> {{ item.phone }}</div>
+                        {% endif %}
+
+                        {% if item.hours != "Hours not available" %}
+                        <div style="color: #10b981;"><i class="fa-solid fa-clock"
+                                style="width: 20px; text-align: center;"></i> {{ item.hours }}</div>
+                        {% endif %}
+
+                        {% if item.website %}
+                        <div style="margin-top: 0.5rem;">
+                            <a href="{{ item.website }}" target="_blank"
+                                style="color: var(--accent-purple); text-decoration: none;">
+                                <i class="fa-solid fa-globe" style="width: 20px; text-align: center;"></i> Visit Website
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Static Reliable Image -->
+                    <div
+                        style="margin-top: 0.5rem; height: 100px; background-image: url('{{ item.image_url }}'); background-size: cover; background-position: center; border-radius: 8px; opacity: 0.9;">
+                    </div>
+
+                </li>
+                {% empty %}
+                <li style="padding: 1.5rem; color: var(--text-secondary); font-style: italic;">No places found in this
+                    category.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}

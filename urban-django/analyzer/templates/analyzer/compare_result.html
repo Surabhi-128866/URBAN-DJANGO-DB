@@ -1,0 +1,83 @@
+{% extends 'analyzer/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 style="text-align: center; margin-bottom: 2rem;">Comparison Result</h1>
+
+    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <!-- Habitat 1 -->
+        <div class="card">
+            <div class="header-section"
+                style="height: 200px; background-image: url('{{ h1.image_url }}'); margin-bottom: 0;">
+                <div class="overlay">
+                    <h2>{{ h1.name }}</h2>
+                </div>
+            </div>
+            <div class="card-content">
+                <p><strong>Population Density:</strong> {{ h1.population_density }}</p>
+                <p><strong>Crime Rate:</strong> {{ h1.crime_rate }}</p>
+                <p><strong>Green Space:</strong> {{ h1.green_space }}%</p>
+                <p><strong>Schools:</strong> {{ h1.schools }}</p>
+                <p><strong>Hospitals:</strong> {{ h1.hospitals }}</p>
+                <p><strong>Restaurants:</strong> {{ h1.restaurants }}</p>
+            </div>
+        </div>
+
+        <!-- Habitat 2 -->
+        <div class="card">
+            <div class="header-section"
+                style="height: 200px; background-image: url('{{ h2.image_url }}'); margin-bottom: 0;">
+                <div class="overlay">
+                    <h2>{{ h2.name }}</h2>
+                </div>
+            </div>
+            <div class="card-content">
+                <p><strong>Population Density:</strong> {{ h2.population_density }}</p>
+                <p><strong>Crime Rate:</strong> {{ h2.crime_rate }}</p>
+                <p><strong>Green Space:</strong> {{ h2.green_space }}%</p>
+                <p><strong>Schools:</strong> {{ h2.schools }}</p>
+                <p><strong>Hospitals:</strong> {{ h2.hospitals }}</p>
+                <p><strong>Restaurants:</strong> {{ h2.restaurants }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-section" style="margin-top: 2rem;">
+        <canvas id="comparisonChart"></canvas>
+    </div>
+
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{% url 'compare' %}" class="btn-back"
+            style="color: #007bff; text-decoration: none; font-weight: bold;">Compare Others</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('comparisonChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Crime Rate', 'Green Space (%)', 'Schools (x10)', 'Hospitals (x10)'],
+            datasets: [
+                {
+                    label: '{{ h1.name }}',
+                    data: [{{ h1.crime_rate }}, {{ h1.green_space }}, {{ h1.schools }}/10, {{ h1.hospitals }}/10],
+        backgroundColor: 'rgba(255, 99, 132, 0.6)'
+                },
+        {
+            label: '{{ h2.name }}',
+            data: [{{ h2.crime_rate }}, {{ h2.green_space }}, {{ h2.schools }}/10, {{ h2.hospitals }}/10],
+        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                }
+            ]
+        },
+        options: {
+        responsive: true,
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+    });
+</script>
+{% endblock %}

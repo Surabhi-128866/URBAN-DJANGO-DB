@@ -1,0 +1,80 @@
+{% extends 'analyzer/base.html' %}
+
+{% block content %}
+<div class="hero">
+    <h1>Find Your Ideal Habitat</h1>
+    <p>Compare livability metrics across urban and suburban environments.</p>
+
+    <form method="post" class="search-box">
+        {% csrf_token %}
+        <input type="text" name="location" placeholder="Search for a city (e.g., Mumbai, Tokyo)..." required>
+        <button type="submit">Analyze</button>
+    </form>
+</div>
+
+{% if error_message %}
+<div
+    style="background-color: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 1rem; margin: 1rem 0; border-radius: 8px; text-align: center;">
+    <strong>Search Failed:</strong> {{ error_message }}
+    {% if suggestions %}
+    <p style="margin-top: 0.5rem;">Did you mean:
+        {% for s in suggestions %}
+        <span style="font-weight: bold;">{{ s }}</span>{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if warning_message %}
+<div
+    style="background-color: #fffbeb; border: 1px solid #f59e0b; color: #b45309; padding: 1rem; margin: 1rem 0; border-radius: 8px; text-align: center;">
+    <strong>Note:</strong> {{ warning_message }}
+</div>
+{% endif %}
+
+{% if searched_habitat %}
+<h2 style="margin-bottom: 1.5rem;">Result</h2>
+<div class="grid">
+    <div class="card">
+        <img src="{{ searched_habitat.image_url }}" alt="{{ searched_habitat.name }}">
+        <div class="card-content">
+            <h3>{{ searched_habitat.name }}</h3>
+            <p>{{ searched_habitat.description|truncatewords:15 }}</p>
+            <a href="{% url 'habitat_details' searched_habitat.id %}" class="btn-details">View Full Analysis &rarr;</a>
+        </div>
+    </div>
+</div>
+<hr style="margin: 3rem 0; border: 0; border-top: 1px solid #ddd;">
+{% endif %}
+
+<!-- Advanced Filters -->
+<div style="margin-bottom: 2rem; display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">
+    <a href="{% url 'index' %}" class="filter-btn {% if not current_filter %}active{% endif %}"
+        style="padding: 8px 16px; border-radius: 20px; text-decoration: none; border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary);">All</a>
+    <a href="?filter=best" class="filter-btn {% if current_filter == 'best' %}active{% endif %}"
+        style="padding: 8px 16px; border-radius: 20px; text-decoration: none; border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary);">🏆
+        Best Rated</a>
+    <a href="?filter=polluted" class="filter-btn {% if current_filter == 'polluted' %}active{% endif %}"
+        style="padding: 8px 16px; border-radius: 20px; text-decoration: none; border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary);">🏭
+        High Pollution</a>
+    <a href="?filter=green" class="filter-btn {% if current_filter == 'green' %}active{% endif %}"
+        style="padding: 8px 16px; border-radius: 20px; text-decoration: none; border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary);">🌳
+        Green Zones</a>
+</div>
+
+<!-- Featured Grid -->
+<h2 style="margin-bottom: 1.5rem;">Cities & Habitats</h2>
+<div class="grid">
+    {% for habitat in habitats %}
+    <div class="card">
+        <img src="{{ habitat.image_url }}" alt="{{ habitat.name }}">
+        <div class="card-content">
+            <h3>{{ habitat.name }}</h3>
+            <p>{{ habitat.description|truncatewords:15 }}</p>
+            <a href="{% url 'habitat_details' habitat.id %}" class="btn-details">View Analysis &rarr;</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
